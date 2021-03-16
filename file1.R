@@ -2,7 +2,7 @@ load("imputedpooleddata2.RData")
 library(mice)
 imp1 <- rbind(complete(imp_pooled_precoce,1), complete(imp_pooled_tardif,1))
 
-## cross validation for random forest hyperparameter
+## k-fold cross validation to pick the random forest hyperparameter
 library(caret)
 library(pROC)
 nfolds <- 10
@@ -58,7 +58,7 @@ abline(v=which.min(apply(cv.er, 2, mean)), col="green", lwd=3, lty=2)
 cv.disc <- sapply(cv.disc, c)
 plot(apply(cv.disc, 2, mean), ylim = c(0,1), col= "red", pch=19,
      xlab="m",
-     ylab="Cross validated AUC",
+     ylab="AUC",
      xaxt="n")
 axis(1, at = seq(1, nfeat, by = 1), las=1)
 
@@ -66,6 +66,10 @@ for (i in 1:nfeat){
         points(rep(i,nfolds), cv.disc[,i], col="grey", pch=19, cex=.3)
 }
 abline(v=which.max(apply(cv.disc, 2, mean)), col="green", lwd=3, lty=2)
+
+# OK it seems that lots if interaction between the variables doesn't help much
+# here while it's likely to overfit the training data
+# from now on we arbitrarily pick the hyperparameter as ~ sqrt(p) without crossvalidation
 
 ### Get single imputed data for AKIKI & IDEAL-ICU trials
 library(dplyr)
@@ -281,6 +285,9 @@ imp1idealicu$cate.akiki <- w_ps_akiki*predict(tau.akiki.early, newdata = imp1ide
         (1-w_ps_akiki)*predict(tau.akiki.late, newdata = imp1idealicu)
 imp1idealicu$r <-  ifelse(imp1idealicu$cate.akiki<0,1,0)
 
+# add R as defined in the manuscript
+imp1idealicu$R <- ifelse(with(imp1idealicu, A==r), 1, 0)
+
 # Compute the ARE estimator according to equation
 are_hat <- with(imp1idealicu, 
      mean(Y*(r-E)*(A-E)/(E*(1-E)))
@@ -290,6 +297,56 @@ are_hat <- with(imp1idealicu,
 res <- boot(imp1idealicu, are_boot, R=999)
 are_hat_ci <- boot.ci(res)$bca[4:5]
 
-# print nice results
+# print results in a table
 are_table <- paste0(round(c(are_hat, are_hat_ci)*100,2), "%")
 names(are_table) <- c("Estimated ARE", "95% CI [ -", "- ]")
+are_table
+
+### Emulated trial estimation of E[Y(1) | A = 0, R = 0] in observational IDEAL-ICU
+y1a0r0_hat <- with(imp1idealicu, 
+                   sum(Y*A*r*(1-E)/E) / sum( (1-A)*r )
+)
+
+## bootstrap
+res <- boot(imp1idealicu, y1a0r0_boot, R=999)
+y1a0r0_ci <- boot.ci(res)$bca[4:5]
+
+### Emulated trial estimation of E[Y(1) - Y | A = 0, R = 0] in observational IDEAL-ICU
+area0r0_hat <- with(imp1idealicu, sum(Y*A*r*(1-E)/E) / sum( (1-A)*r )) -
+        with(imp1idealicu[imp1idealicu$A==0 & imp1idealicu$r!=imp1idealicu$A,], mean(Y))
+
+res <- boot(imp1idealicu, area0r0_boot, R=999)
+area0r0_ci <- boot.ci(res)$bca[4:5]
+        
+### Emulated trial estimation of E[Y(1) | A = 1, R = 0] in observational IDEAL-ICU
+y1a1r0_hat <- with(imp1idealicu, 
+                   sum(Y*(1-A)*E*(1-r)/(1-E)) / sum( (1-r)*A )
+)
+
+## bootstrap
+res <- boot(imp1idealicu, y1a1r0_boot, R=999)
+y1a1r0_ci <- boot.ci(res)$bca[4:5]
+
+### Emulated trial estimation of E[Y(1) - Y | A = 1, R = 0] in observational IDEAL-ICU
+area1r0_hat <- with(imp1idealicu, 
+                   sum(Y*(1-A)*E*(1-r)/(1-E)) / sum( (1-r)*A )) -
+        with(imp1idealicu[imp1idealicu$A==1 & imp1idealicu$r!=imp1idealicu$A,], mean(Y))
+
+## bootstrap
+res <- boot(imp1idealicu, area1r0_boot, R=999)
+area1r0_ci <- boot.ci(res)$bca[4:5]
+
+
+## Check if estimations are consistent with the equation 
+
+with(imp1idealicu, mean(R==0))* (
+        with(imp1idealicu[imp1idealicu$R==0,], mean(A==0))*area0r0_hat
+                +
+        with(imp1idealicu[imp1idealicu$R==0,], mean(A==1))*area1r0_hat
+)
+
+are_hat        
+
+# Both are equal so there should be not error in the implementation
+# Here the benefit of the ITR is mostly (/totally) driven by area1r0_hat
+
