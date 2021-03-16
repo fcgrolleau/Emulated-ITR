@@ -1,0 +1,246 @@
+\documentclass[10pt]{article}
+%
+%% Paquets
+\usepackage[a4paper,margin=2.8cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{times}
+\usepackage{amsmath,amssymb,amsthm,amsfonts}
+\usepackage{graphicx}
+\usepackage{authblk}
+\usepackage{color}
+\usepackage{cite}
+\usepackage{bm}
+
+%%Paquets utile seulement durant la phase de redaction
+\usepackage{marginnote}
+
+
+%% User-defined commands
+\def\ci{\perp\!\!\!\perp}
+\newcommand{\Esp}{\mbox{E}}
+\newcommand{\logit}{\mbox{logit}}
+\newcommand{\ind}[1]{\bm{1}_{#1}}
+
+\renewcommand{\baselinestretch}{1.25}
+
+
+\DeclareMathOperator{\Prob}{P}
+
+
+\title{Emulating a trial for external validation of individualized treatment rules using real-life data}
+
+\author[1,2]{François Grolleau}
+\author[1]{François Petit}
+\author[3]{Gary S. Collins}
+\author[1,2]{Rapha\"el Porcher\footnote{E-mail: \texttt{raphael.porcher@aphp.fr}}}
+\affil[1]{Universit\'e de Paris, Centre of Research Epidemiology and Statistics (CRESS), INSERM U1153, Paris, France}
+\affil[2]{Centre d'\'Epid\'emiologie Clinique, Assistance Publique-H\^opitaux de Paris, H\^otel-Dieu, Paris, France}
+\affil[3]{Centre for Statistics in Medicine, Nuffield Department of Orthopaedics, Rheumatology \& Musculoskeletal Sciences, University of Oxford, Oxford, United Kingdom}
+
+\date{\today}
+\begin{document}
+	
+\theoremstyle{plain} % style plain
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition} % style definition
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{examples}[theorem]{Examples}
+\newtheorem{question}[theorem]{Question}
+\newtheorem{Rem}[theorem]{Remark}
+\newtheorem{Notation}[theorem]{Notations}
+	
+	
+	
+	
+\numberwithin{equation}{section}
+
+\maketitle
+
+\abstract
+
+\section{Introduction}
+
+In the last years, numerous methods have been developed to estimate individualized treatment effects, and associated individualized treatment rules (ITRs). Approaches range from the use of traditional risk prediction models to estimate individualized treatment effects in a counterfactual framework \cite{Dorresteijn2011,Nguyen2020} to sophisticated machine learning approaches targeting the individualized treatment effects or directly learning the ITR \cite{Qian2011,Zhang2012,Zhao2015a,Chen2017,Nie2020,Kunzel2019}. Whatever the approach, model validation is an important part of the development of individualized treatment rules. When internal validation can be carried out using cross-validation or bootstrapping, external validation remains a necessary step forward \cite{Steyerberg2013}. To our knowledge, external validation of models for personalized medicine have often concentrated on the external validation of prediction models and individualized treatment effects rather than the ITR itself \cite{Farooq2013,Basu2017}, or few have used data from randomised controlled trials \cite{Modolo2020}. Moreover, methods on the estimation of the benefit of an ITR compared to usual treatment strategies are much less developed than methods for validation of prediction models or methods to develop ITRs \cite{Janes2011,Janes2014,vanKlaveren2018}. From a methodological point-of-view, the best study design to estimate the benefit of the use of an ITR compared to usual care, is undoubtedly running a randomised controlled trial (RCT), where participants would be randomised between the use of the ITR or usual care [REF?]. This type of study is not easy to conduct in practice, and retrospective analysis of existing data can provide important insights at a lower cost and time, before a randomised study can be set up. Secondary analysis of RCT data can be used, but observational, or real-life, data may offer larger sample sizes than randomised controlled trial, as well as a better external validity, in particular when one would want to assess the benefit compared to a usual care strategy. In both cases, how to emulate a target trial for the estimation of the benefit of ITRs is not straightforward. Indeed, individuals treated according to the ITR would have a treatment consistent both with usual care and the individualized treatment strategy. We propose here a method for external validation of an individualized treatment rule using RCT or observational data. Our approach is illustrated on XXX.
+
+
+\section{Methods}
+
+\subsection{Framework}
+
+We place ourselves in Rubin’s causal model, and consider there each individual $i$ has two potential outcomes $Y(a=0)_i$ and $Y(a=1)_i$ according to whether they receive treatment strategy $A_i = 0$ and $A_i = 1$, respectively \cite{Rubin1974}. In usual comparative effectiveness studies using observational data, the treatment indicator A denotes the experimental treatment ($A = 1$) or control ($A = 0$). Causal inference on the conditional or average treatment effects in that framework relies on several assumptions, such as consistency, no interference, no unmeasured confounder and positivity (i.e. all individuals in the study could receive either treatment) \cite{Rubin1986,Hernan2012}. In particular, the consistency assumption posits that, if an individual $i$ received treatment $A_i = a$, then their observed outcome $Y_i$ is $Y(a=a)_i$ \cite{Pearl2010}. This assumption is necessary in particular to relate the observed outcome to the potential outcome. 
+
+\subsection{Benefit of an ITR}
+
+Let us now consider an ITR. Using a set of covariates $X$, the ITR can be seen as a function $r$ mapping the covariate space $\mathcal{X}$ to $\{0, 1\}$, so that when $r(X_i) = 0$ the recommended treatment for individual $i$ would be $A_i = 0$ and when $r(X_i) = 1$ it would be $A_i = 1$. ITRs may be derived from expert opinion and panels, or estimated from RCT or observational data. This work studies how we could estimate the population benefit of using an ITR compared to usual care, using observational data, such as a claims database or a cohort study, for instance.
+
+The main difference with the usual situation outlined above, is that we are no more comparing patients who received $A = 1$ to those receiving $A = 0$ in the presence of confounding. One could define a new treatment variable $R$ corresponding to whether an individual’s actual treatment was consistent with the ITR or not, i.e. $R_i = 1$ if $A_i = r(X_i)$ and $R_i = 0$ if $A_i \neq r(X_i)$. However, comparing the outcome of patients with $R = 1$ to those with $R = 0$ does not estimate the same effect as would be obtained in a trial randomizing between the ITR and usual care, even if confounding is adequately accounted for. Because this study would compare what would occur if everyone followed the ITR vs nobody followed it, if we target the average treatment effect for instance. Different estimands such as the average treatment effect in the treated can be targeted, but again it fails to acknowledge that under a usual care strategy, some---or even a large majority---of individuals would have received the treatment recommended by the ITR. In that respect, this study would emulate a trial randomizing between the ITR and usual care, but rather a trial randomizing between following the ITR and doing the opposite, which would be close to a randomised reverse biomarker design \cite{Eng2014}. Whereas the latter may be considered as efficient in validating the ITR, but would not provide an estimate of the population benefit of the use of the ITR.
+For estimating the population benefit of an ITR, we could consider a new treatment variable $U$, with $U_i = 1$ if individual $i$ was treated according to the ITR and $U_i = 0$ if treated according to usual care, and the average benefit of the ITR would could be estimated by the average difference between outcomes of patients with $U = 1$ and those with $U = 0$, after adjustment for confounding. However, outcomes of patients who actually receive the treatment recommended by the ITR are compatible with both the ITR and usual care, so there is no means to identify $U_i$ for individuals with $R_i = 1$, though we know that $U_i = 0$ when $R_i = 0$. 
+
+One may additionally remark that the outcome of those with $R_i = 1$ would be unchanged by the implementation of the ITR, because they would be treated the same as with usual care. The average benefit of the ITR for those patients is therefore zero, and all benefit will be driven by those for whom the ITR would change the treatment received. The average benefit compared to usual care can therefore be expressed as $\Delta_{r_0} \times \Pr(R = 0)$, where $\Delta_{r_0}$ denotes the average treatment effect of implementing the ITR for those who receive the opposite treatment under usual care (average treatment effect in the non-treated). A similar formulation has been obtained in a simpler setting of comparing the outcome under a biomarker-based treatment strategy compared to a “treat all” strategy \cite{Janes2014}.
+
+
+\subsection{Inference}
+
+We first introduce a few notations. We denote by
+
+\begin{enumerate}
+\item $Y(0)$ the potential outcome obtained by following standard care,
+\item $Y(1)$ the potential outcome obtained by following the ITR,
+\item $Y(a=0)$ the potential outcome obtained when not receiving the treatment,
+\item $Y(a=1)$ the potential outcome obtained when receiving the treatments.
+\item $Y$ the observed outcome (the one from the data).
+\end{enumerate}
+
+Our aim is to estimate the average rule effect (ARE)
+\begin{equation*}
+	ARE=\Esp(Y(1)-Y(0))
+\end{equation*}
+We notice that $\ind{\lbrace R=1\rbrace}(Y(0)-Y(1))=0$ since on $\lbrace R=1\rbrace$ standard care and the ITR agree. Hence,
+\begin{equation*}
+	ARE=\Esp(\ind{\lbrace R=0 \rbrace}(Y(1)-Y(0))).
+\end{equation*}
+Moreover,
+\begin{align*}
+	\Esp(Y(1)-Y(0) | R)&=\Esp(\ind{\lbrace R=0 \rbrace}(Y(1)-Y(0))|R)\\
+	&=\ind{\lbrace R=0 \rbrace} \Esp(Y(1)-Y(0)|R=0)
+\end{align*}
+We set $\Delta_{r_0}= \Esp(Y(1)-Y(0)|R=0)$
+Now,
+\begin{align*}
+	\Esp(Y(1)-Y(0))&= \Esp (\Esp(Y(1)-Y(0)| R))\\
+	&= \Esp(\ind{\lbrace R=0 \rbrace} \Delta_{r_0})\\
+	&=\Prob(R=0)\Delta_{r_0}.
+\end{align*}
+
+
+We relate the various outcomes. Recall that
+%
+\begin{align*}
+	Y(1)&=r(X) Y(a=1)+(1-r(X))Y(a=0)\\
+	Y(0)&=A Y(a=1)+(1-A)Y(a=0).\\
+\end{align*}
+Since,
+\begin{equation*}
+	\Esp(Y(1)-Y(0))=\Esp(Y(1)-Y)-\Esp(Y(0)-Y),
+\end{equation*}
+We can assume loss of generality that $Y(0)=Y$. For the sake of brevity, we write $r$ instead of $r(X)$ and designate by $e(x):=\Prob(A=1|X=x)$ the propensity score of $A$. Then
+
+\begin{align*}
+	\Esp(rY(a=1))&= \Esp(\frac{r}{e} \, e \, Y(a=1))\\
+	             &= \Esp(\frac{r}{e} \, \Esp(A |X) \, \Esp(Y(a=1)|X))\\
+	             &=\Esp(\frac{r}{e} \, \Esp(A Y(a=1)|X))\\
+	             &=\Esp(\frac{r}{e} \, \Esp(A Y|X))\\
+	             &=\Esp(\frac{r}{e}\,A Y).\\
+\end{align*}
+ Similarly, we obtain
+ 
+ \begin{align*}
+ 	\Esp((1-r)Y(a=0))&= \Esp(\frac{1-r}{1-e} \, (1-e) \, Y(a=0))\\
+ 	&=\Esp(\frac{1-r}{1-e}\,(1-A) Y).\\
+ \end{align*}
+
+Combining these expression, we get
+\begin{align*}
+	\Esp(Y(1)-Y(0)))=\Esp(\frac{(r-e)}{e} A \, Y)-\Esp(\frac{(r-e)}{ (1-e)} (1-A) \, Y)
+\end{align*}
+
+Assuming that we know the propensity score $e(x)$, we can estimate the $ARE$ by
+
+\begin{align*}
+	\widehat{ARE}&= \frac{1}{N}\sum_{i=1}^{N}\frac{A_i -e(X_i)}{e(X_i)(1-e(X_i))}(r(X_i)-e(X_i)) \, Y_i\\
+	&= \frac{1}{N}\sum_{ i \in \{A_i=1\}} \frac{ r(X_i)-e(X_i)}{e(X_i)} \, Y_i-\frac{1}{N}\sum_{ i \in \{A_i=0\}} \frac{ r(X_i)-e(X_i)}{1-e(X_i)} \, Y_i
+\end{align*}
+
+\subsection{Estimation of $\Esp(Y(1)|A=0,R=0)$ and $\Esp(Y(1)|A=1,R=0)$}.
+
+
+First, we notice that 
+\begin{equation*}
+	R=1-(r(X)-A)^2.
+\end{equation*}
+%
+We have
+%
+\begin{align*}
+	\Esp((1-R)(1-A)Y(1)) &= \Esp((1-R)(1-A)\Esp(Y(1)|A, R))\\
+	                     &=\Prob(A=0,R=0) \Esp(Y(1)|A=0, R=0)
+\end{align*}
+and
+\begin{align*}
+	\Esp((1-R)(1-A)Y(1))&=\Esp((1-R)(1-A)(rY(a=1)+(1-r)Y(a=0)))\\
+	                    &=\Esp(r(1-R)(1-A)Y(a=1))+\Esp((1-r)(1-R)(1-A)Y(a=0))
+\end{align*}
+But $(1-r)(1-R)(1-A)=0$ and $(1-R)(1-A)=r(1-A)$. Hence,
+\begin{equation*}
+	\Esp((1-R)(1-A)Y(1))=\Esp(r(1-A)Y(a=1)).
+\end{equation*}
+Thus,
+\begin{align*}
+	\Esp((1-R)(1-A)Y(1))&=\Esp(r(1-A)Y(a=1))\\
+	                    &=\Esp(rY(a=1))-\Esp(rA\,Y(a=1))\\
+	                    &=\Esp \left(\frac{r}{e}A\,Y\right)-\Esp(rA\,Y)\\
+	                    &=\Esp\left(\frac{r(1-e)}{e} A \, Y\right)
+\end{align*}
+This leads to the following formula
+
+\begin{equation*}
+	\Esp(Y(1)|A=0, R=0)=\frac{1}{\Prob(A=0,R=0)}\Esp\left(\frac{r(1-e)}{e} A \, Y\right).
+\end{equation*}
+
+and suggests the following estimator $\widehat{m}_{Y(1)|A=0, R=0}$ of $\Esp(Y(1)|A=0, R=0)$
+
+\begin{equation*}
+\widehat{m}_{Y(1)|A=0, R=0}= \frac{\sum_{i=1}^N \frac{r(X_i)(1-e(X_i))}{e(X_i)} A_i \, Y_i}{\sum_{i=1}^N (1-A_i)r(X_i)} 
+\end{equation*}
+
+\marginpar{I will add the properties of this estimator: consistance, variance...}
+
+We now treat the case of $\Esp(Y(1)|A=1, R=0)$. Similarly
+
+\begin{align*}
+	\Esp((1-R)A \, Y(1))&=\Prob(A=1,R=0) \Esp(Y(1)|A=1, R=0).
+\end{align*}
+Then
+\begin{align*}
+		\Esp((1-R)A \, Y(1))&=\Esp(A(1-R) \lbrack r Y(a=1)+(1-r)Y(a=0)\rbrack )\\
+		                    &=\Esp(A(1-R)r \,Y(a=1))+\Esp(A(1-R)(1-r)Y(a=0))
+\end{align*}
+But $A(1-R)r=0$ and $A(1-R)(1-r)= -A (1-r)$. It follows that
+\begin{align*}
+	\Esp((1-R)A \, Y(1))&= \Esp(-A (1-r) Y(a=0))\\
+	                    &= \Esp((1-A) (1-r) Y(a=0))-\Esp((1-r) Y(a=0))\\
+	                    &=\Esp((1-A) (1-r) Y)-\Esp(\frac{1-r}{1-e}\,(1-A) Y)\\
+	                    &=\Esp(\frac{e(r-1)}{e-1} (1-A) Y)
+\end{align*}
+This leads to
+\begin{equation*}
+	\Esp(Y(1)|A=1, R=0)=\frac{1}{\Prob(A=1,R=0)}\Esp(\frac{e(r-1)}{e-1} (1-A) Y).
+\end{equation*}
+
+and suggests the following estimator $\widehat{m}_{Y(1)|A=1, R=0}$ of $\Esp(Y(1)|A=1, R=0)$
+
+\begin{equation*}
+\widehat{m}_{Y(1)|A=1, R=0}= \frac{\sum_{i=1}^N \frac{e(X_i)(r(X_i)-1)}{e(X_i)-1} (1-A_i) \, Y_i}{\sum_{i=1}^N (1-r(X_i) A_i} 
+\end{equation*}
+
+\marginpar{I will write down the properties of this estimator}
+\subsection{Data}
+
+\section{Results}
+
+\section{Discussion}
+
+
+\subsection{Limitations}
+We did not consider other potential benefits of formalizing an individualized treatment rule, such as standardization of care, equity \ldots
+
+
+%\bibliographystyle{sim}
+%\bibliography{stratmed}
+
+\end{document}
