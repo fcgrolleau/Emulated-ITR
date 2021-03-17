@@ -30,4 +30,41 @@ area1r0_boot <- function(d, i=1:nrow(d)) {
         )
 }
 
+are_aipw_boot <- function(d, i=1:nrow(d)) {
+        z<-d[i,]
+        return(with(z,
+                    mean(
+                        R*Y/Pi_d -
+                        prognosis_pred*(R-Pi_d)/Pi_d        
+                    ) - 
+                    mean(Y)
+        ))
+}
 
+
+are_s_aipw_boot <- function(d, i=1:nrow(d), nsim=100, stoch_p=1) {
+        z<-d[i,]
+        temp <- vector()
+        for (j in 1:nsim) {
+                
+                z$P <- rbinom(nrow(z),1,stoch_p)
+                # create new stochastic rule
+                z$r_s <- with(z, r^rbinom(1,1,P)*A^(1-rbinom(1,1,P)) )
+                table(with(z, r==r_s))
+                
+                z$R_s <- ifelse(with(z, A==r_s), 1, 0)
+                
+                # this equation is critical for the simulation see notes/manuscript
+                z$Pi_d_s <- with(z, ((E^r_s)*((1-E)^(1-r_s)))^P )
+                
+                temp[j] <- 
+                        with(z,
+                             mean(
+                                R_s*Y/Pi_d_s -
+                                prognosis_pred*(R_s-Pi_d_s)/Pi_d_s        
+                             ) - 
+                            mean(Y) ) 
+                
+        }
+        return(mean(temp))
+}
