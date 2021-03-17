@@ -399,7 +399,7 @@ res <- boot(imp1idealicu, are_aipw_boot, R=999)
 are_aipw_ci <- boot.ci(res)$bca[4:5]
 
 
-### Simulations to ITR uniform stochastic implementation
+### Simulations for effect of stochastic implementation of ITR on Delta aipw
 
 set.seed(56489)
 nimp <- 10
@@ -442,7 +442,7 @@ ci_mat <- matrix(NA, nrow=nimp, ncol=2)
 row <- 0
 for (i in seq(0,1,length=nimp)) {
         row <- row + 1
-        temp <- boot(imp1idealicu, are_s_aipw_boot, R=499, nsim=1000, stoch_p=i)
+        temp <- boot(imp1idealicu, are_s_aipw_boot, R=199, nsim=100, stoch_p=i)
         ci_mat[row,] <- temp$t0+c(-1,1)*qnorm(.975)*sd(temp$t)
         print(paste0(100*row/nimp,"%"))
 }
@@ -460,4 +460,59 @@ polygon(c(seq(0,1,length=nimp), rev(seq(0,1,length=nimp))), c(ci_mat[,1], rev(ci
         col= rgb(0, 161, 213, maxColorValue=255, alpha=255*.6), border=NA)
 abline(h=0, lwd=1, lty=2)
 dev.copy2pdf(file="stochastic_plot.pdf")
+
+
+### Simulations for effect of stochastic implementation of ITR on DeltaA0R0 / DeltaA1R0
+
+set.seed(9543)
+nimp <- 10
+nsim <- 1000
+
+delta_ratio_sim <- matrix(NA, nrow=nimp, ncol=nsim)
+
+row <- 0
+for (i in seq(0,1,length=nimp)) {
+        stoch_p <- i
+        row <- row + 1
+for (j in 1:nsim) {
+
+imp1idealicu$P <- rbinom(nrow(imp1idealicu),1,stoch_p)
+# create new stochastic rule
+imp1idealicu$r_s <- with(imp1idealicu, r^rbinom(1,1,P)*A^(1-rbinom(1,1,P)) )
+# create new R variable for the stochastic rule                
+imp1idealicu$R_s <- ifelse(with(imp1idealicu, A==r_s), 1, 0)
+
+area0r0_temp <- with(imp1idealicu, sum(Y*A*r_s*(1-E)/E) / sum( (1-A)*r_s )) -
+        with(imp1idealicu[imp1idealicu$A==0 & imp1idealicu$r!=imp1idealicu$A,], mean(Y))
+
+area1r0_temp <- with(imp1idealicu, 
+                    sum(Y*(1-A)*E*(1-r_s)/(1-E)) / sum( (1-r_s)*A )) -
+        with(imp1idealicu[imp1idealicu$A==1 & imp1idealicu$r_s!=imp1idealicu$A,], mean(Y))
+temp <- area0r0_temp/area1r0_temp
+delta_ratio_sim[row, j] <- temp
+}
+print(paste0(100*j*row/(nimp*nsim), "%"))
+}
+
+# estimation of area0r0_temp and area1r0_temp are impossible in all the simulations 
+# where the stochastic rule dictates that all treatment should be the same as in 
+# standard of care
+apply(delta_ratio_sim, 1, function(x) sum(is.nan(x)))
+
+# we therefore ignore these simulations
+apply(delta_ratio_sim, 1, mean, na.rm=T)
+
+## plot the stochastic implementation of the rule with confidence intervals
+dev.new(width=10, height=10, unit="in")
+plot(seq(0,1,length=nimp)[-1], apply(delta_ratio_sim, 1, mean, na.rm=T)[-1],
+     xlim=c(0,1), ylim=c(-.15, 1.15),
+     main="What Drives The Benefit of ITR Implementation in The IDEAL-ICU Population",
+     xlab="Stochastic Rule Implmentation",
+     ylab=expression(paste(Delta, "A0R0 / ", Delta, "A1R0")), type="n", bty="n", xaxt='n', las=2)
+axis(1, seq(0,1,by=.2), paste0(seq(0,1,by=.2)*100, "%"))
+points(seq(0,1,length=nimp)[-1], apply(delta_ratio_sim, 1, mean, na.rm=T)[-1], pch=19, col=rgb(0, 161, 213, maxColorValue=255))
+lines(seq(0,1,length=nimp)[-1], apply(delta_ratio_sim, 1, mean, na.rm=T)[-1], pch=19, lwd=1, col=rgb(0, 161, 213, maxColorValue=255))
+abline(h=1, lwd=1, lty=1)
+abline(h=0, lwd=1, lty=2)
+dev.copy2pdf(file="stochastic_delta_ratio_plot.pdf")
 
