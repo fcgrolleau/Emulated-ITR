@@ -350,3 +350,114 @@ are_hat
 # Both are equal so there should be not error in the implementation
 # Here the benefit of the ITR is mostly (/totally) driven by area1r0_hat
 
+### Compute the ARE estimator from AIPW estimator (Tsiatis et al. eq 3.30 page 62)
+# get propensity for receiving treatment according to the rule (eq 3.21 page 59)
+imp1idealicu$Pi_d <- with(imp1idealicu, (E^r)*((1-E)^(1-r)) )
+
+# Note Cd,i in the book corresponds to Ri under our notation 
+
+# Compute are_aipw_hat with Pi_d from slightly mispesified propensity score (SOFA)
+# and prognosis_pred as prognostic score model (we don't know if it's well specified 
+# as we don't know the real prognostic score model here)
+
+are_aipw_hat <- with(imp1idealicu,
+     mean(
+          R*Y/Pi_d -
+          prognosis_pred*(R-Pi_d)/Pi_d        
+     ) - 
+     mean(Y)
+     )
+
+# Note that when the prognosis score model is 0 are_aipw_hat == are_hat
+are_aipw_hat <- with(imp1idealicu,
+                    mean(
+                        R*Y/Pi_d -
+                        0*(R-Pi_d)/Pi_d        
+                     ) - 
+                    mean(Y)
+)
+
+dec <- vector()
+for (i in 1:20){
+dec[i] <- round(are_aipw_hat,i)==round(are_hat,i)
+}
+length(which(dec))
+
+# aipw_hat == are_hat to 16 decimal places here
+
+
+# boot strap the original are_aipw_hat
+are_aipw_hat <- with(imp1idealicu,
+                     mean(
+                        R*Y/Pi_d -
+                        prognosis_pred*(R-Pi_d)/Pi_d        
+                     ) - 
+                     mean(Y)
+)
+
+res <- boot(imp1idealicu, are_aipw_boot, R=999)
+are_aipw_ci <- boot.ci(res)$bca[4:5]
+
+
+### Simulations to ITR uniform stochastic implementation
+
+set.seed(56489)
+nimp <- 10
+nsim <- 1000
+
+are_s_aipw_sim <- matrix(NA, nrow=nimp, ncol=nsim)
+
+row <- 0
+for (i in seq(0,1,length=nimp)) {
+stoch_p <- i
+row <- row + 1
+for (j in 1:nsim) {
+        
+imp1idealicu$P <- rbinom(nrow(imp1idealicu),1,stoch_p)
+# create new stochastic rule
+imp1idealicu$r_s <- with(imp1idealicu, r^rbinom(1,1,P)*A^(1-rbinom(1,1,P)) )
+table(with(imp1idealicu, r==r_s))
+
+imp1idealicu$R_s <- ifelse(with(imp1idealicu, A==r_s), 1, 0)
+
+# this equation is critical for the simulation see notes/manuscript
+imp1idealicu$Pi_d_s <- with(imp1idealicu, ((E^r_s)*((1-E)^(1-r_s)))^P )
+
+are_s_aipw_sim[row,j] <- 
+with(imp1idealicu,
+                     mean(
+                             R_s*Y/Pi_d_s -
+                             prognosis_pred*(R_s-Pi_d_s)/Pi_d_s        
+                     ) - 
+                     mean(Y) )
+
+}
+print(paste0(100*row*j/(nimp*nsim),"%"))
+}
+are_s_aipw_sim
+
+## bootstrap
+
+ci_mat <- matrix(NA, nrow=nimp, ncol=2)
+row <- 0
+for (i in seq(0,1,length=nimp)) {
+        row <- row + 1
+        temp <- boot(imp1idealicu, are_s_aipw_boot, R=499, nsim=1000, stoch_p=i)
+        ci_mat[row,] <- temp$t0+c(-1,1)*qnorm(.975)*sd(temp$t)
+        print(paste0(100*row/nimp,"%"))
+}
+
+## plot the stochastic implementation of the rule with confidence intervals
+dev.new(width=10, height=10, unit="in")
+plot(seq(0,1,length=nimp), apply(are_s_aipw_sim, 1, mean), ylim=c(-.08,.02),
+     main="Benefit For ITR Implementation in The IDEAL-ICU Population",
+     xlab="Stochastic Rule Implmentation",
+     ylab=expression(paste(Delta, "aipw For Mortality at Day 60")), type="n", bty="n", xaxt='n', las=2)
+axis(1, seq(0,1,by=.2), paste0(seq(0,1,by=.2)*100, "%"))
+lines(seq(0,1,length=nimp), apply(are_s_aipw_sim, 1, mean), pch=19, lwd=2, col=rgb(0, 161, 213, maxColorValue=255))
+
+polygon(c(seq(0,1,length=nimp), rev(seq(0,1,length=nimp))), c(ci_mat[,1], rev(ci_mat[,2])),
+        col= rgb(0, 161, 213, maxColorValue=255, alpha=255*.6), border=NA)
+abline(h=0, lwd=1, lty=2)
+dev.copy2pdf(file="stochastic_plot.pdf")
+
