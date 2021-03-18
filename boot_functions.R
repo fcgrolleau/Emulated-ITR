@@ -75,7 +75,7 @@ are_s_aipw_boot <- function(d, i=1:nrow(d), nsim=100, stoch_p=1) {
                 
                 z$P <- rbinom(nrow(z),1,stoch_p)
                 # create new stochastic rule
-                z$r_s <- with(z, r^rbinom(1,1,P)*A^(1-rbinom(1,1,P)) )
+                z$r_s <- apply(z[,c('r','A','P')], 1, function(x) x['r']^rbinom(1,1,x['P'])*x['A']^(1-rbinom(1,1,x['P'])) )
                 table(with(z, r==r_s))
                 
                 z$R_s <- ifelse(with(z, A==r_s), 1, 0)
