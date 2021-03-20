@@ -441,7 +441,7 @@ ci_mat <- matrix(NA, nrow=nimp, ncol=2)
 row <- 0
 for (i in seq(0,1,length=nimp)) {
         row <- row + 1
-        temp <- boot(imp1idealicu, are_s_aipw_boot, R=99, nsim=10, stoch_p=i)
+        temp <- boot(imp1idealicu, are_s_aipw_boot, R=49, nsim=2, stoch_p=i)
         ci_mat[row,] <- temp$t0+c(-1,1)*qnorm(.975)*sd(temp$t)
         print(paste0(100*row/nimp,"%"))
 }
