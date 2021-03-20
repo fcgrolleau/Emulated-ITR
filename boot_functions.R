@@ -1,7 +1,7 @@
 are_boot <- function(d, i=1:nrow(d)) {
         z<-d[i,]
         # refit PS model in each bootstrap resample
-        ps_temp <- glm(Y~sofa_e, data=a, family = "binomial")
+        ps_temp <- glm(Y~sofa_e, data=z, family = "binomial")
         z$E <-predict(ps_temp, type = "response")
         
         return(with(z, mean(Y*(r-E)*(A-E)/(E*(1-E))) ))
@@ -10,7 +10,7 @@ are_boot <- function(d, i=1:nrow(d)) {
 y1a0r0_boot <- function(d, i=1:nrow(d)) {
         z<-d[i,]
         # refit PS model in each bootstrap resample
-        ps_temp <- glm(Y~sofa_e, data=a, family = "binomial")
+        ps_temp <- glm(Y~sofa_e, data=z, family = "binomial")
         z$E <-predict(ps_temp, type = "response")
         
         return(with(z, 
@@ -20,7 +20,7 @@ y1a0r0_boot <- function(d, i=1:nrow(d)) {
 area0r0_boot <- function(d, i=1:nrow(d)) {
         z<-d[i,]
         # refit PS model in each bootstrap resample
-        ps_temp <- glm(Y~sofa_e, data=a, family = "binomial")
+        ps_temp <- glm(Y~sofa_e, data=z, family = "binomial")
         z$E <-predict(ps_temp, type = "response")
         
         return(with(z, sum(Y*A*r*(1-E)/E) / sum( (1-A)*r )) -
@@ -30,7 +30,7 @@ area0r0_boot <- function(d, i=1:nrow(d)) {
 y1a1r0_boot <- function(d, i=1:nrow(d)) {
         z<-d[i,]
         # refit PS model in each bootstrap resample
-        ps_temp <- glm(Y~sofa_e, data=a, family = "binomial")
+        ps_temp <- glm(Y~sofa_e, data=z, family = "binomial")
         z$E <-predict(ps_temp, type = "response")
         
         return(with(z, 
@@ -41,7 +41,7 @@ y1a1r0_boot <- function(d, i=1:nrow(d)) {
 area1r0_boot <- function(d, i=1:nrow(d)) {
         z<-d[i,]
         # refit PS model in each bootstrap resample
-        ps_temp <- glm(Y~sofa_e, data=a, family = "binomial")
+        ps_temp <- glm(Y~sofa_e, data=z, family = "binomial")
         z$E <-predict(ps_temp, type = "response")
         
         return(with(z, 
@@ -53,7 +53,7 @@ area1r0_boot <- function(d, i=1:nrow(d)) {
 are_aipw_boot <- function(d, i=1:nrow(d)) {
         z<-d[i,]
         # refit PS model in each bootstrap resample
-        ps_temp <- glm(Y~sofa_e, data=a, family = "binomial")
+        ps_temp <- glm(Y~sofa_e, data=z, family = "binomial")
         z$E <-predict(ps_temp, type = "response")
         # then recompute the propensity for receiving treatment according to the rule
         z$Pi_d <- with(z, (E^r)*((1-E)^(1-r)) )
