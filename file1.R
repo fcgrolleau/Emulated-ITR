@@ -522,3 +522,93 @@ text(.3, .70, expression(paste(Delta, "A1R0 = -0.287")), pos=4)
 text(.3, .50, "Benefit is only driven from implementing \nthe rule in the treated patients!", pos=4)
 #dev.copy2pdf(file="stochastic_delta_ratio_plot.pdf")
 
+
+### New approach for effect of stochastic implementation of ITR on Delta ipw
+### No more simulation needed
+
+set.seed(56489)
+nimp <- 10
+
+are_s_ipw_sim <- rep(NA, length=nimp)
+
+row <- 0
+for (i in seq(0,1,length=nimp)) {
+        stoch_p <- i
+        row <- row + 1
+        imp1idealicu$r_s <- apply(imp1idealicu[,c('r','A', 'E')], 1, function(x) stoch_p*x['r'] + (1-stoch_p)*x['E'] )
+                
+                are_s_ipw_sim[row] <- 
+                        with(imp1idealicu, mean( (A-E)*(r_s-E)*Y/(E*(1-E)) ) )
+                
+        print(paste0(round(i*100),"%"))
+}
+are_s_ipw_sim
+
+## bootstrap
+
+ci_mat <- matrix(NA, nrow=nimp, ncol=2)
+row <- 0
+for (i in seq(0,1,length=nimp)) {
+        row <- row + 1
+        temp <- boot(imp1idealicu, are_s_ipw_boot, R=999, stoch_p=i)
+        #ci_mat[row,] <- boot.ci(temp)$bca[c(4,5)]
+        ci_mat[row,] <- temp$t0+c(-1,1)*qnorm(.975)*sd(temp$t)
+        print(paste0(round(i*100),"%"))
+}
+
+
+dev.new(width=10, height=10, unit="in")
+plot(seq(0,1,length=nimp), are_s_ipw_sim, ylim=c(-.16,.05),
+     main="Benefit For ITR Implementation in The IDEAL-ICU Population",
+     xlab="Stochastic Rule Implementation",
+     ylab=expression(paste(Delta, "ipw For Mortality at Day 60")), type="n", bty="n", xaxt='n', las=2)
+axis(1, seq(0,1,by=.2), paste0(seq(0,1,by=.2)*100, "%"))
+lines(seq(0,1,length=nimp), are_s_ipw_sim, pch=19, lwd=2, col=rgb(0, 161, 213, maxColorValue=255))
+
+polygon(c(seq(0,1,length=nimp), rev(seq(0,1,length=nimp))), c(ci_mat[,1], rev(ci_mat[,2])),
+        col= rgb(0, 161, 213, maxColorValue=255, alpha=255*.6), border=NA)
+abline(h=0, lwd=1, lty=2)
+
+
+### New approach for effect of stochastic implementation of ITR on Delta ipw
+### with different probabilities of implementation in A=0 and A=1
+
+set.seed(56489)
+nimp <- 500
+
+are_s2_ipw_sim <- rep(NA, nimp)
+iter <- 0
+for (i in seq(0,1,length=nimp)) {
+        stoch_p0 <- i
+for (j in seq(0,1,length=nimp)) {
+        iter <- iter + 1
+        stoch_p1 <- j
+        
+        imp1idealicu[imp1idealicu$A==0,]$r_s <- apply(imp1idealicu[,c('r','A', 'E')], 1, function(x) {
+                        stoch_p0*x['r'] + (1-stoch_p0)*x['E']
+        } )[imp1idealicu$A==0]
+        
+        imp1idealicu[imp1idealicu$A==1,]$r_s <- apply(imp1idealicu[,c('r','A', 'E')], 1, function(x) {
+                stoch_p1*x['r'] + (1-stoch_p1)*x['E']
+        } )[imp1idealicu$A==1]
+        
+        are_s2_ipw_sim[iter] <- 
+                with(imp1idealicu, mean( (A-E)*(r_s-E)*Y/(E*(1-E)) ) )
+        
+}
+        print(paste0(round(i*100,2),"%"))
+}
+are_s2_ipw_sim 
+x <- matrix(are_s2_ipw_sim, nimp, nimp)
+library('plot.matrix')
+x <- t(x[,ncol(x):1])
+#plot(-x, border=NA, asp=TRUE, digits=2, text.cell=list(cex=0.5), col=heat.colors, breaks=nimp^2)
+#plot(x, border=NA, asp=TRUE, col=rainbow, breaks=nimp^2)
+plot(-x, border=NA, asp=NA, col=heat.colors, breaks=nimp^2, main="",
+     xlab="Stochastic implementation in the treated", ylab="Stochastic implementation in the non-treated",
+     axis.col=NULL, axis.row=NULL, key=T)
+     #digits=2, text.cell=list(cex=0.5))
+
+#axis(1, 0:nimp, paste0(0:nimp*10, "%"))
+#axis(2, 0:nimp, paste0(0:nimp*10, "%"))
+
