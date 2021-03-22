@@ -98,3 +98,15 @@ are_s_aipw_boot <- function(d, i=1:nrow(d), nsim=100, stoch_p=1) {
         }
         return(mean(temp))
 }
+
+
+are_s_ipw_boot <- function(d, i=1:nrow(d), stoch_p=1) {
+        z<-d[i,]
+        # refit PS model in each bootstrap resample
+        ps_temp <- glm(Y~sofa_e, data=z, family = "binomial")
+        z$E <-predict(ps_temp, type = "response")
+        
+        z$r_s <- apply(z[,c('r','A', 'E')], 1, function(x) stoch_p*x['r'] + (1-stoch_p)*x['E'] )
+        return( with(z, mean( (A-E)*(r_s-E)*Y/(E*(1-E)) ) )
+        )
+}
