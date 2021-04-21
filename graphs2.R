@@ -335,3 +335,70 @@ legend(8,.13, box.lty = 0, title=expression(ASRE(r^stoch)), bg="white",
        lwd=2, col=jamacol)
 text(13.5, are_val+.01, paste("ARE(r) =", format(round(are_val, digits=2), nsmall = 2)) )
 
+### plot 5
+dev.new(width=wl, height=wl*3, pointsize=7)
+par(mar=c(7,4,1,1))
+par(mfrow=c(3,1))
+par(xpd=FALSE)
+
+plot(1, type="n", bty="n", xaxt="n", xlim=range(sim), ylim=c(-1,1), xlab="", ylab="", las=1)
+axis(side=1, at = seq(10,100, by=15))
+abline(h=0)
+points(sim, 40*sapply(sim, f), type="l", lwd=2, col="#374E55FF")
+#points(sim, sapply(sim, r_e), type="l", lwd=2, col="#00A1D5FF")
+points(sim, sapply(sim, e), type="l", lwd=2, col="#00A1D5FF")
+points(sim, sapply(sim, tau), type="l", lwd=2, col="#DF8F44FF")
+points(sim, sapply(sim, function(x) tau(x)+se(x)), type="l", lwd=1, lty=3, col="#DF8F44FF")
+points(sim, sapply(sim, function(x) tau(x)-se(x)), type="l", lwd=1, lty=3, col="#DF8F44FF")
+
+par(xpd=TRUE)
+legend("topright", box.lty = 0, bg="white",
+       legend=c("f(x) . 40", expression(hat(e)(x)), expression(hat(tau)(x))),
+       lwd=2, col=c("#374E55FF", "#00A1D5FF","#DF8F44FF"))
+
+plot(1, type="n", bty="n", xaxt="n", xlim=range(sim), ylim=c(0,1), xlab="", ylab="", las=1)
+axis(side=1, at = seq(10,100, by=15))
+
+jamacol1 <- c("#79AF97FF", "#79C897")[1]
+jamacol2 <- c("#B24745FF", "#C84745")[1]
+jamacol <- c(jamacol1, jamacol2)
+
+p0 <- function(x) abs(1-ifelse(tau(x)>0,1,0)-e(x))^i(alpha)
+
+it <- 0
+for (j in c(1/3, 2/3) ) {
+        alpha <- j
+        it <- it+1
+        lines(sim, sapply(sim, p0), lwd=2, col=jamacol[it])
+}
+
+legend(8,.6, box.lty = 0, title=expression(p(x)==abs(1-1[tau(x)>0]-e(x))^legit(alpha)),
+       legend=c(expression(paste(alpha, "=1/3 ")),
+                expression(paste(alpha, "=2/3 "))),
+       lwd=2, col=jamacol)
+
+
+plot(1, type="n", bty="n", xaxt="n", yaxt="n", xlim=range(sim), ylim=c(0,.18), xlab="age", ylab="")
+axis(side=1, at = seq(10,100, by=15))
+axis(side=2, at = seq(0,.18, length=4), las=1)
+
+it <- 0
+asre_val <- list()
+
+for (j in c(1/3, 2/3) ) {
+        alpha <- j
+        it <- it+1
+        lines(seq(10,100, by=.5), sapply(seq(10,100, by=.5), function(x) integrate(asre_f0, lower=10, upper=x)$value), lwd=2, col=jamacol[it])
+        asre_val[[it]] <- integrate(asre_f0, lower=10, upper=100)$value
+}
+
+asre_val <- sapply(asre_val,c)
+are_val <- integrate(are_f1, lower=10, upper=100)$value
+
+par(xpd=FALSE)
+segments(0,are_val,100,are_val, lty=2)
+
+legend(8,.13, box.lty = 0, title=expression(ASRE(r^stoch)), bg="white",
+       legend=format(round(asre_val, digits=2), nsmall = 2), 
+       lwd=2, col=jamacol)
+text(13.5, are_val+.01, paste("ARE(r) =", format(round(are_val, digits=2), nsmall = 2)) )
