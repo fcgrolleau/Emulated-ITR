@@ -363,16 +363,16 @@ jamacol1 <- c("#79AF97FF", "#79C897")[1]
 jamacol2 <- c("#B24745FF", "#C84745")[1]
 jamacol <- c(jamacol1, jamacol2)
 
-p0 <- function(x) abs(1-ifelse(tau(x)>0,1,0)-e(x))^i(alpha)
+p0 <- function(x) (1-abs(ifelse(tau(x)>0,1,0)-e(x)))^i(alpha)
 
 it <- 0
-for (j in c(1/3, 2/3) ) {
+for (j in c(1/3, 2/3) ) { 
         alpha <- j
         it <- it+1
         lines(sim, sapply(sim, p0), lwd=2, col=jamacol[it])
 }
 
-legend(8,.6, box.lty = 0, title=expression(p(x)==abs(1-1[tau(x)>0]-e(x))^legit(alpha)),
+legend(8,.6, box.lty = 0, title=expression(p(x)==(1-abs(1[tau(x)>0]-e(x)))^legit(alpha)),
        legend=c(expression(paste(alpha, "=1/3 ")),
                 expression(paste(alpha, "=2/3 "))),
        lwd=2, col=jamacol)
@@ -385,7 +385,7 @@ axis(side=2, at = seq(0,.18, length=4), las=1)
 it <- 0
 asre_val <- list()
 
-for (j in c(1/3, 2/3) ) {
+for (j in c(1/3, 2/3) ) { 
         alpha <- j
         it <- it+1
         lines(seq(10,100, by=.5), sapply(seq(10,100, by=.5), function(x) integrate(asre_f0, lower=10, upper=x)$value), lwd=2, col=jamacol[it])
