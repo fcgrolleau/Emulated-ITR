@@ -17,7 +17,7 @@ from asre_compute import tools
 
 tools.asre_package(observational_dataframe, 
           rule = "rule",
-          ttt = 'cabg',
+          ttt = "cabg",
           y = "Y",
           ps_predictors = ["age", "crcl_log", "copd", "tvd", "lmcad", "both"],
           pronostic_predictors = ["tvd", "lmcad", "both", "syntax", "age", "crcl", "diabetes", "insulin", "lvef", "smoking", "pvd", "copd"],
