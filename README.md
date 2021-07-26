@@ -10,7 +10,7 @@ From a pandas dataframe, this program computes the Absolute Rule Effect or cogni
 pip install asre-compute
 ```
 
-2. Generate an aesthetic ASCII visual:
+2. Import, specify the models, plot:
 
 ```python
 from asre_compute import tools
