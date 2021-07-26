@@ -1,6 +1,6 @@
 # ASRE-Compute
 
-From a pandas dataframe, this program computes the Absolute Rule Effect or cognitive biais Absolute Stochastic Rule Effect through A-learning and provides asymptotic 95% confidence intervals from M-estimation sandwich formula.
+From a pandas dataframe, this program computes the Absolute Rule Effect or cognitive biais Absolute Stochastic Rule Effect through A-learning and provides asymptotic 95% confidence intervals from M-estimation's sandwich formula.
 
 ## Instructions
 
